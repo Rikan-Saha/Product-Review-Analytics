@@ -39,7 +39,7 @@ if uploaded_file:
                 df_chart,
                 x="Sentiment",
                 y="Count",
-                text="Count",
+                # text="Count",
                 title="Sentiment Overview",
             )
 
