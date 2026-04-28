@@ -1,4 +1,19 @@
-def analyze_sentiment(text):
+import re
+
+def _is_spam(text: str) -> bool:
+    if not isinstance(text, str):
+        return True
+    t = text.lower()
+    if len(t) < 8:
+        return True
+    if re.search(r"buy now|free money|click here|http|www\.|!!!|\$\$\$", t):
+        return True
+    # too many repeated characters
+    if re.search(r"(.)\1{5,}", t):
+        return True
+    return False
+
+def _classify_sentiment(text):
     text = text.lower()
 
     if "not bad" in text or "not worst" in text:
@@ -15,6 +30,6 @@ def analyze_sentiment(text):
         return "neutral"
 
 
-def apply_sentiment(df):
-    df["sentiment"] = df["review"].apply(analyze_sentiment)
-    return df
+# def _classify_sentiment(df):
+#     df["sentiment"] = df["review"].apply(analyze_sentiment)
+#     return df
