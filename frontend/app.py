@@ -44,7 +44,32 @@ if uploaded_file:
                 CLUSTERING_URL,
                 json = cleaned_data
             )
-            summarization = response.json()
+            data = response.json()
+
+            summarization = data["summaries"]
+            cluster_counts = data["cluster_counts"]
+
+            df_chart = pd.DataFrame(
+                list(cluster_counts.items()),
+                columns=["Cluster", "Count"]
+            ).sort_values("Cluster")
+
+            fig = px.bar(
+                df_chart,
+                x="Cluster",
+                y="Count",
+                text="Count",
+                color="Cluster",
+                title="Cluster Distribution"
+            )
+
+            fig.update_traces(textposition='outside')
+            fig.update_layout(
+                xaxis_title="Cluster ID",
+                yaxis_title="Number of Reviews"
+            )
+
+            st.plotly_chart(fig, use_container_width=True)
 
             response = requests.post(
                 GENERATE_IMPR_URL,
@@ -53,50 +78,16 @@ if uploaded_file:
             
             print(response.json())
             
+            data = response.json()
 
+            recommendations = data["suggestions"]
 
+            print("::::",recommendations,"::::")
+            st.subheader("AI Product Improvement Suggestions")
 
-
-
-
-
-
-
-
-
-
-        # if response.status_code == 200:
-        #     data = response.json()
-
-        #     # ---------------------------
-        #     # 📊 INTERACTIVE CHART
-        #     # ---------------------------
-        #     st.subheader("📊 Sentiment Distribution")
-
-        #     sentiments = data["sentiment_counts"]
-
-        #     df_chart = pd.DataFrame({
-        #         "Sentiment": list(sentiments.keys()),
-        #         "Count": list(sentiments.values())
-        #     })
-
-        #     fig = px.bar(
-        #         df_chart,
-        #         x="Sentiment",
-        #         y="Count",
-        #         # text="Count",
-        #         title="Sentiment Overview",
-        #     )
-
-        #     st.plotly_chart(fig, use_container_width=True)
-
-        #     # ---------------------------
-        #     # 💡 RECOMMENDATIONS
-        #     # ---------------------------
-        #     st.subheader("💡 Product Improvement Insights")
-
-        #     for rec in data["recommendations"]:
-        #         st.success(rec)
-
-        # else:
-        #     st.error("Error processing file")
+            for rec in recommendations:
+                with st.container():
+                    st.markdown(f"### 🚀 {rec['action']}")
+                    st.write(f"**Priority:** {rec['priority']}")
+                    st.info(rec["rationale"])
+                    st.markdown("---")

@@ -9,7 +9,7 @@ from typing import List, Dict, Any
 # from backend.src.ingestion import clean_reviews
 from backend.src.sentiment import _is_spam, _classify_sentiment
 from backend.src.embedding import embed_texts
-from backend.src.clustering import cluster_embeddings, _top_terms
+from backend.src.clustering import _top_terms, cluster_embeddings_thread # cluster_embeddings
 from backend.src.agent import propose_improvements
 from backend.src.load_data import load_csv, load_xlsx
 
@@ -57,13 +57,16 @@ def clean_ds(data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     return df_clean.to_dict(orient="records")
 
 @app.post("/cluster_summarizer")
-def cluster_summarizer(cleaned_data: List[Dict[str, Any]]) -> Dict[int, Dict[str, Any]]:
+def cluster_summarizer(cleaned_data: List[Dict[str, Any]]) -> Dict[str, Any]:
     cleaned_df = pd.DataFrame(cleaned_data)
     texts = cleaned_df["_text"].tolist()
     embeddings = embed_texts(texts)
-    labels = cluster_embeddings(embeddings)
+    labels = cluster_embeddings_thread(embeddings) # cluster_embeddings(embeddings)
     cleaned_df["cluster"] = labels
     
+    # print("cleaned_df:", cleaned_df)
+    cluster_counts = cleaned_df["cluster"].value_counts().to_dict()
+
     summaries = {}
     for lbl in sorted(cleaned_df["cluster"].unique()):
         rows = cleaned_df[cleaned_df["cluster"] == lbl]
@@ -75,7 +78,7 @@ def cluster_summarizer(cleaned_data: List[Dict[str, Any]]) -> Dict[int, Dict[str
             "samples": samples,
             "sentiment_dist": rows["sentiment"].value_counts(normalize=True).to_dict(),
         }
-    return summaries
+    return {"cluster_counts": cluster_counts, "summaries": summaries}
 
 @app.post("/generate_improvement_plans")
 def generate_improvement_plans(summarization: Dict[int, Dict[str, Any]]):
@@ -86,7 +89,7 @@ def generate_improvement_plans(summarization: Dict[int, Dict[str, Any]]):
     cluster_summaries_text = "\n".join(cluster_summaries)
     suggestions = propose_improvements(cluster_summaries_text)
 
-    return summarization, suggestions
+    return {"summarization": summarization, "suggestions": suggestions}
 
 
 @app.post("/embed_text")
