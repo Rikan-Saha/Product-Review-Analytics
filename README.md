@@ -30,11 +30,11 @@ Data Ingestion & Cleaning (Python)
         ↓
 Sentiment Analysis
         ↓
-Text Embedding (TF-IDF)
+Text Embedding (Sentence Transformer)
         ↓
 Clustering (KMeans)
         ↓
-Insight Generation (AI Agent)
+Insight Generation (AI Agent + Placeholder Text)
         ↓
 FastAPI Backend
         ↓
