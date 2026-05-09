@@ -38,7 +38,7 @@ Insight Generation (AI Agent + Placeholder Text)
         ↓
 FastAPI Backend
         ↓
-Streamlit Dashboard
+Streamlit Dashboard (JavaScript based Charts)
 ```
 
 ---
@@ -58,7 +58,9 @@ Project3/
 │       └── agent.py
 │
 ├── frontend/
-│ └── app.py
+| ├── app.py
+| ├── style.css
+│ └── dashboard.js
 │
 └── README.md
 ```
