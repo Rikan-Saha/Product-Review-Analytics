@@ -39,20 +39,24 @@ window.onload = function () {
     // =====================================
     // DONUT CHART
     // =====================================
-    const chartList = [
-        {
-            id: "sentimentChart1",
-            data: dashboardData.sentimentChart1
-        },
-        {
-            id: "sentimentChart2",
-            data: dashboardData.sentimentChart2
-        },
-        {
-            id: "sentimentChart3",
-            data: dashboardData.sentimentChart3
+    const chartList = [];
+
+    // =====================================
+    // DYNAMIC SENTIMENT CHARTS
+    // =====================================
+
+    Object.keys(dashboardData).forEach((key) => {
+
+        if (key.startsWith("sentimentChart")) {
+
+            chartList.push({
+
+                id: key,
+
+                data: dashboardData[key]
+            });
         }
-    ];
+    });
     function createDoughnutChart(canvasId, chartData) {
 
         const ctx = document.getElementById(canvasId);

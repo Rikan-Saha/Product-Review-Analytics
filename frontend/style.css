@@ -5,6 +5,10 @@
     gap: 20px;
 }
 
+.center-heading {
+    text-align: center;
+}
+
 .chart-box {
 
     background: #f5f5f6;

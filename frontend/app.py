@@ -76,6 +76,7 @@ uploaded_file = st.file_uploader(
 
 if uploaded_file:
 
+    no_of_clusters = st.slider("How many cluster you want?", 0, 200, 3)
     if st.button("Analyze Reviews"):
 
         with st.spinner("Processing Reviews..."):
@@ -110,7 +111,10 @@ if uploaded_file:
 
             response = requests.post(
                 CLUSTERING_URL,
-                json=cleaned_data
+                json={
+                    "cleaned_data": cleaned_data,
+                    "num_clusters": no_of_clusters
+                }
             )
 
             data = response.json()
@@ -138,26 +142,27 @@ if uploaded_file:
                     "labels": list(summarization["0"]["sentiment_dist"].keys()),
                     "values": list(summarization["0"]["sentiment_dist"].values())}
             print(sentimentChart1, "sentimentChart1")
+            sentiment_distribution = {}
             dashboard_data = {
 
                 "barChart": {
-                    "labels": df_chart["Cluster"].tolist(),
+                    "labels": [f"Cluster-{int(i)+1}" for i in df_chart["Cluster"].tolist()],
                     "values": df_chart["Count"].tolist()
                 },
-
-                "sentimentChart1": {
-                    "labels": list(summarization["0"]["sentiment_dist"].keys()),
-                    "values": list(summarization["0"]["sentiment_dist"].values())
-                },
-                "sentimentChart2": {
-                    "labels": list(summarization["1"]["sentiment_dist"].keys()),
-                    "values": list(summarization["1"]["sentiment_dist"].values())
-                },
-                "sentimentChart3": {
-                    "labels": list(summarization["2"]["sentiment_dist"].keys()),
-                    "values": list(summarization["2"]["sentiment_dist"].values())
-                }
             }
+
+            for idx, (cluster_id, cluster_data) in enumerate(summarization.items(), start=1):
+
+                dashboard_data[f"sentimentChart{idx}"] = {
+
+                    "labels": list(
+                        cluster_data["sentiment_dist"].keys()
+                    ),
+
+                    "values": list(
+                        cluster_data["sentiment_dist"].values()
+                    )
+                }
 
             dashboard_json = json.dumps(
                 dashboard_data
@@ -215,7 +220,7 @@ if uploaded_file:
 
                 <div class="chart-box">
 
-                    <h2>
+                    <h2 class="center-heading">
                         Cluster Distribution
                     </h2>
 
@@ -224,24 +229,27 @@ if uploaded_file:
                 </div>
 
                 <br> </br>
+            """
+            html_code_1 += """
+            <div class="charts">
+            """
 
-                <div class="charts">
+            for idx, cluster_id in enumerate(summarization.keys(), start=1):
 
-                    <div class="chart-box">
-                        <h2>Sentiment Distribution</h2>
-                        <canvas id="sentimentChart1"></canvas>
-                    </div>
+                html_code_1 += f"""
+                <div class="chart-box">
 
-                    <div class="chart-box">
-                        <h2>Sentiment Distribution</h2>
-                        <canvas id="sentimentChart2"></canvas>
-                    </div>
+                    <h2 class="center-heading">
+                        Sentiment Distribution - Cluster {int(cluster_id) + 1}
+                    </h2>
 
-                    <div class="chart-box">
-                        <h2>Sentiment Distribution</h2>
-                        <canvas id="sentimentChart3"></canvas>
-                    </div>
+                    <canvas id="sentimentChart{idx}"></canvas>
+
                 </div>
+                """
+
+            html_code_1 += """
+            </div>
             """
             # ==========================================
             # HTML END

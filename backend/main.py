@@ -56,15 +56,21 @@ def clean_ds(data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
 
     return df_clean.to_dict(orient="records")
 
+from pydantic import BaseModel
+class ClusterRequest(BaseModel):
+    cleaned_data: List[Dict[str, Any]]
+    num_clusters: int
+
 @app.post("/cluster_summarizer")
-def cluster_summarizer(cleaned_data: List[Dict[str, Any]]) -> Dict[str, Any]:
-    cleaned_df = pd.DataFrame(cleaned_data)
+def cluster_summarizer(request: ClusterRequest) -> Dict[str, Any]:
+    cleaned_df = pd.DataFrame(request.cleaned_data)
+    no_of_clusters = request.num_clusters
     texts = cleaned_df["_text"].tolist()
     embeddings = embed_texts(texts)
-    labels = cluster_embeddings_thread(embeddings) # cluster_embeddings(embeddings)
+    labels = cluster_embeddings_thread(embeddings, no_of_clusters) # cluster_embeddings(embeddings)
     cleaned_df["cluster"] = labels
     
-    # print("cleaned_df:", cleaned_df)
+    print("cleaned_df:", cleaned_df)
     cluster_counts = cleaned_df["cluster"].value_counts().to_dict()
 
     summaries = {}

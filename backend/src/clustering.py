@@ -44,7 +44,7 @@ def _run_kmeans(embeddings: np.ndarray, n_clusters: int):
 def cluster_embeddings_thread(embeddings: np.ndarray, n_clusters: int = 3):
     """Run KMeans using ThreadPoolExecutor"""
 
-    with ThreadPoolExecutor(max_workers=10) as executor:
+    with ThreadPoolExecutor(max_workers=20) as executor:
         future = executor.submit(_run_kmeans, embeddings, n_clusters)
         labels = future.result()
 
