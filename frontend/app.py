@@ -134,16 +134,28 @@ if uploaded_file:
             # ==========================================
             # DASHBOARD DATA
             # ==========================================
-
+            sentimentChart1= {
+                    "labels": list(summarization["0"]["sentiment_dist"].keys()),
+                    "values": list(summarization["0"]["sentiment_dist"].values())}
+            print(sentimentChart1, "sentimentChart1")
             dashboard_data = {
 
                 "barChart": {
+                    "labels": df_chart["Cluster"].tolist(),
+                    "values": df_chart["Count"].tolist()
+                },
 
-                    "labels":
-                        df_chart["Cluster"].tolist(),
-
-                    "values":
-                        df_chart["Count"].tolist()
+                "sentimentChart1": {
+                    "labels": list(summarization["0"]["sentiment_dist"].keys()),
+                    "values": list(summarization["0"]["sentiment_dist"].values())
+                },
+                "sentimentChart2": {
+                    "labels": list(summarization["1"]["sentiment_dist"].keys()),
+                    "values": list(summarization["1"]["sentiment_dist"].values())
+                },
+                "sentimentChart3": {
+                    "labels": list(summarization["2"]["sentiment_dist"].keys()),
+                    "values": list(summarization["2"]["sentiment_dist"].values())
                 }
             }
 
@@ -166,11 +178,14 @@ if uploaded_file:
                 "suggestions"
             ]
 
+            
+
+            print(summarization, "recomendations")
             # ==========================================
             # HTML START
             # ==========================================
 
-            html_code = f"""
+            html_code_1 = f"""
 
             <!DOCTYPE html>
 
@@ -208,61 +223,31 @@ if uploaded_file:
 
                 </div>
 
-                <div class="recommendations-section">
+                <br> </br>
 
-            """
+                <div class="charts">
 
-            # ==========================================
-            # DYNAMIC RECOMMENDATION CARDS
-            # ==========================================
-
-            for rec in recommendations:
-
-                priority = rec["priority"]
-
-                priority_class = ""
-
-                if priority == 1:
-
-                    priority_class = "high-priority"
-
-                elif priority == 2:
-
-                    priority_class = "medium-priority"
-
-                else:
-
-                    priority_class = "low-priority"
-
-                html_code += f"""
-
-                <div class="recommendation-card">
-
-                    <h3>
-                        🚀 {rec['action']}
-                    </h3>
-
-                    <div class="priority {priority_class}">
-
-                        Priority: {rec['priority']}
-
+                    <div class="chart-box">
+                        <h2>Sentiment Distribution</h2>
+                        <canvas id="sentimentChart1"></canvas>
                     </div>
 
-                    <div class="recommendation-info">
-
-                        {rec['rationale']}
-
+                    <div class="chart-box">
+                        <h2>Sentiment Distribution</h2>
+                        <canvas id="sentimentChart2"></canvas>
                     </div>
 
+                    <div class="chart-box">
+                        <h2>Sentiment Distribution</h2>
+                        <canvas id="sentimentChart3"></canvas>
+                    </div>
                 </div>
-
-                """
-
+            """
             # ==========================================
             # HTML END
             # ==========================================
 
-            html_code += f"""
+            html_code_1 += f"""
 
                 </div>
 
@@ -292,7 +277,80 @@ if uploaded_file:
             # ==========================================
 
             components.html(
-                html_code,
+                html_code_1,
+                height=1000,
+                scrolling=True
+            )
+            # ==========================================
+            # DYNAMIC RECOMMENDATION CARDS
+            # ==========================================
+
+            html_code_2 = f"""
+            <!DOCTYPE html>
+
+            <html>
+
+            <head>
+
+            <meta charset="UTF-8">
+
+            <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+            <style>
+
+            {css}
+
+            </style>
+
+            </head>
+
+            <body>
+
+            """
+            for rec in recommendations:
+
+                priority = rec["priority"]
+
+                priority_class = ""
+
+                if priority == 1:
+
+                    priority_class = "high-priority"
+
+                elif priority == 2:
+
+                    priority_class = "medium-priority"
+
+                else:
+
+                    priority_class = "low-priority"
+
+                html_code_2 += f"""
+                <div class="recommendations-section">
+                    <div class="recommendation-card">
+
+                        <h3>
+                            🚀 {rec['action']}
+                        </h3>
+
+                        <div class="priority {priority_class}">
+
+                            Priority: {rec['priority']}
+
+                        </div>
+
+                        <div class="recommendation-info">
+
+                            {rec['rationale']}
+
+                        </div>
+                    </div>
+                </div>
+                </body>
+                </html>
+                """
+            components.html(
+                html_code_2,
                 height=1600,
                 scrolling=True
             )

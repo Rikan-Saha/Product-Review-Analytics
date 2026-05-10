@@ -37,6 +37,84 @@ window.onload = function () {
     }
 
     // =====================================
+    // DONUT CHART
+    // =====================================
+    const chartList = [
+        {
+            id: "sentimentChart1",
+            data: dashboardData.sentimentChart1
+        },
+        {
+            id: "sentimentChart2",
+            data: dashboardData.sentimentChart2
+        },
+        {
+            id: "sentimentChart3",
+            data: dashboardData.sentimentChart3
+        }
+    ];
+    function createDoughnutChart(canvasId, chartData) {
+
+        const ctx = document.getElementById(canvasId);
+
+        if (!ctx) {
+            console.error(`Canvas not found: ${canvasId}`);
+            return;
+        }
+
+        if (!chartData) {
+            console.error(`Data missing for: ${canvasId}`);
+            return;
+        }
+
+        new Chart(ctx, {
+            type: "doughnut",
+
+            data: {
+                labels: chartData.labels,
+
+                datasets: [{
+                    data: chartData.values,
+
+                    backgroundColor: [
+                        "#10b981",
+                        "#f59e0b",
+                        "#ef4444"
+                    ]
+                }]
+            },
+            options: {
+
+                responsive: true,
+
+                maintainAspectRatio: false,
+
+                plugins: {
+
+                    legend: {
+
+                        display: false
+                    },
+
+                    tooltip: {
+
+                        backgroundColor: "#111827",
+
+                        titleColor: "#ffffff",
+
+                        bodyColor: "#ffffff",
+
+                        padding: 12
+                    }
+                }
+            }
+        });
+    }
+
+    chartList.forEach(chart => {
+        createDoughnutChart(chart.id, chart.data);
+    });
+    // =====================================
     // BAR CHART
     // =====================================
 

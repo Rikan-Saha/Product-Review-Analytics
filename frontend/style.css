@@ -1,3 +1,10 @@
+.charts {
+
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 20px;
+}
+
 .chart-box {
 
     background: #f5f5f6;
