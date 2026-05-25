@@ -1,138 +1,308 @@
 # 📊 AI Product Review Analytics System
 
----
-
-## 🚀 Project Overview
-
-This project builds an end-to-end analytics pipeline to analyze product reviews and generate actionable insights using Natural Language Processing (NLP) techniques.
-
-The system integrates **FastAPI (backend)**, **Streamlit (frontend)**, and **Machine Learning (NLP & Clustering)** to transform raw customer feedback into meaningful business insights.
+AI-powered product review analytics platform using React, FastAPI, NLP, Sentence Transformers, and clustering techniques to analyze customer reviews and generate actionable product insights.
 
 ---
 
-## 🎯 Business Objective
+# 🚀 Project Overview
+
+This project builds an end-to-end AI analytics pipeline to process large-scale product reviews and transform raw customer feedback into meaningful business intelligence.
+
+The system integrates:
+
+- React-based interactive frontend
+- FastAPI backend APIs
+- NLP & Machine Learning techniques
+- Sentence Transformer embeddings
+- K-Means clustering
+- AI-driven recommendation generation
+
+The platform enables organizations to automatically discover customer pain points, sentiment trends, and actionable product improvement opportunities.
+
+---
+
+# 🎯 Business Objective
 
 To analyze customer reviews and automatically:
 
 - Classify sentiment (Positive, Negative, Neutral)
+- Detect spam reviews
 - Identify recurring product issues
-- Generate product improvement strategies
-- Provide interactive visualization for better decision-making
+- Cluster customer pain points
+- Generate AI-powered improvement recommendations
+- Provide interactive analytics dashboards
 
 ---
 
-## 🏗️ Project Architecture
+# 🏗️ Project Architecture
 
-```
-User Upload (CSV)
-        ↓
-Data Ingestion & Cleaning (Python)
-        ↓
+```text
+User Upload (CSV/XLSX)
+          ↓
+React Frontend Dashboard
+          ↓
+FastAPI REST APIs
+          ↓
+Data Cleaning & NLP Processing
+          ↓
 Sentiment Analysis
-        ↓
-Text Embedding (Sentence Transformer)
-        ↓
-Clustering (KMeans)
-        ↓
-Insight Generation (AI Agent + Placeholder Text)
-        ↓
-FastAPI Backend
-        ↓
-Streamlit Dashboard (JavaScript based Charts)
+          ↓
+Sentence Transformer Embeddings
+          ↓
+K-Means Clustering
+          ↓
+AI Recommendation Engine
+          ↓
+Interactive Visualization Dashboard
 ```
 
 ---
 
-## 📂 Project Structure
+# 📂 Project Structure
 
-```
-Project3/
+```text
+AI-Product-Review-System/
 │
 ├── backend/
-│ ├── main.py
-│ └── src/
+│   ├── main.py
+│   │
+│   └── src/
 │       ├── load_data.py
 │       ├── sentiment.py
 │       ├── embedding.py
 │       ├── clustering.py
 │       └── agent.py
 │
-├── frontend/
-| ├── app.py
-| ├── style.css
-│ └── dashboard.js
+├── frontend_react/
+│   │
+│   ├── public/
+│   │
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── BarChart.jsx
+│   │   │   ├── SentimentChart.jsx
+│   │   │   └── RecommendationCard.jsx
+│   │   │
+│   │   ├── pages/
+│   │   │   └── Dashboard.jsx
+│   │   │
+│   │   ├── styles/
+│   │   │   └── dashboard.css
+│   │   │
+│   │   ├── App.js
+│   │   └── index.js
+│   │
+│   └── package.json
+│
+├── images/
 │
 └── README.md
 ```
+
 ---
 
-## ⚙️ Installation & Setup
+# 🔥 Key Features
 
-### 1️⃣ Clone Repository
+- CSV/XLSX review ingestion
+- Automated data cleaning pipeline
+- Spam review detection
+- NLP-based sentiment analysis
+- Sentence Transformer embeddings
+- K-Means clustering for customer issue grouping
+- AI-generated improvement recommendations
+- Dynamic React dashboard
+- Interactive charts using Chart.js
+- REST API architecture using FastAPI
+- Modular and scalable frontend/backend design
+
+---
+
+# 🖥️ Dashboard Screenshots
+
+## File Upload and No. of Clusters
+
+![Dashboard](images/file_upload.png)
+
+---
+
+## Cluster Analytics
+
+![Charts](images/dashboard.png)
+
+---
+
+## AI Recommendations: Below are plceholders.
+
+![Recommendations](images/recommendation.png)
+
+---
+
+# ⚙️ Installation & Setup
+
+## 1️⃣ Clone Repository
 
 ```bash
 git clone https://github.com/Rikan-Saha/Product-Review-Analytics.git
-cd Project3
+
+cd AI-Product-Review-System
 ```
-### 2️⃣ Create Virtual Environment
-``` 
+
+---
+
+# ⚙️ Backend Setup
+
+## 2️⃣ Create Virtual Environment
+
+### Windows
+
+```bash
 python -m venv env1
-env1\Scripts\activate   # Windows
+
+env1\Scripts\activate
 ```
 
-### 3️⃣ Install Dependencies
-```
-pip install fastapi uvicorn pandas scikit-learn streamlit requests plotly
+---
+
+## 3️⃣ Install Backend Dependencies
+
+```bash
+pip install fastapi uvicorn pandas scikit-learn sentence-transformers openpyxl python-multipart
 ```
 
-### ▶️ How to Run the Project
-```
-Step 1: Run Backend (FastAPI)
-python -m uvicorn backend.main:app --reload
+---
 
-Backend will run at:
+## 4️⃣ Run FastAPI Backend
+
+```bash
+uvicorn backend.main:app --reload
+```
+
+Backend runs at:
+
+```text
 http://127.0.0.1:8000
-
-Step 2: Run Frontend (Streamlit)
-
-Open a new terminal and run:
-
-streamlit run frontend/app.py
-
-Frontend will open at:
-http://localhost:8501
-
 ```
 
-## 🔥 Key Highlights
+---
 
-* End-to-end pipeline from raw review data to interactive dashboard  
-* Automated ingestion, sentiment analysis, clustering, and insight generation  
-* Integration of ML outputs into a user-friendly Streamlit application  
-* Interactive and intuitive visualization using Plotly  
+# ⚙️ Frontend Setup
+
+## 5️⃣ Navigate to React Frontend
+
+```bash
+cd frontend_react
+```
 
 ---
 
-## 💼 Business Impact
+## 6️⃣ Install Frontend Dependencies
 
-* Identifies key customer pain points from large-scale reviews  
-* Helps improve product quality and customer experience  
-* Enables data-driven product and business decisions  
-* Provides actionable insights for continuous product improvement  
+```bash
+npm install
+```
+
+---
+
+## 7️⃣ Install Chart.js Packages
+
+```bash
+npm install chart.js react-chartjs-2
+```
 
 ---
 
-## 🚀 Future Enhancements
+## 8️⃣ Run React Frontend
 
-* Integrate transformer-based sentiment models (BERT, RoBERTa)
-* Use LLMs for advanced and contextual recommendations  
-* Store results in a database (PostgreSQL / MongoDB)  
-* Deploy application on cloud platforms (AWS / Azure)  
-* Add real-time review streaming and monitoring  
+```bash
+npm start
+```
+
+Frontend runs at:
+
+```text
+http://localhost:3000
+```
 
 ---
-## 🙏 Acknowledgment
+
+# 🧠 NLP & AI Workflow
+
+## Step 1 — Data Ingestion
+- Upload CSV/XLSX review dataset
+
+## Step 2 — Data Cleaning
+- Remove spam reviews
+- Normalize review text
+
+## Step 3 — Sentiment Analysis
+- Positive
+- Neutral
+- Negative classification
+
+## Step 4 — Text Embedding
+- Generate semantic embeddings using Sentence Transformers
+
+## Step 5 — Clustering
+- Group similar customer pain points using K-Means clustering
+
+## Step 6 — AI Recommendation Generation
+- Generate actionable product improvement suggestions
+
+## Step 7 — Visualization
+- Display insights in interactive React dashboards
+
+---
+
+# 💻 Tech Stack
+
+## Frontend
+- React
+- JavaScript
+- CSS
+- Chart.js
+
+## Backend
+- FastAPI
+- Python
+
+## Machine Learning / NLP
+- Scikit-Learn
+- Sentence Transformers
+- K-Means Clustering
+- Pandas
+
+---
+
+# 💼 Business Impact
+
+- Identifies major customer pain points automatically
+- Enables data-driven product improvement
+- Improves customer satisfaction analysis
+- Accelerates review intelligence workflows
+- Reduces manual review analysis effort
+- Provides actionable AI-driven recommendations
+
+---
+
+# 🚀 Future Enhancements
+
+- Authentication & Role-Based Access
+- Cloud deployment (AWS / Azure)
+- Advanced LLM summarization
+- Real-time review streaming
+- Vector database integration
+- RAG-based review intelligence system
+- Advanced analytics & forecasting
+- Exportable PDF/Excel reports
+
+---
+
+# 📌 Resume Project Summary
+
+AI-powered product review analytics system using React, FastAPI, NLP, Sentence Transformers, and K-Means clustering to analyze customer reviews, identify pain points, perform sentiment analysis, and generate AI-driven product improvement recommendations through interactive dashboards.
+
+---
+
+# 🙏 Acknowledgment
 
 Thank you for reviewing this project.
-
----
