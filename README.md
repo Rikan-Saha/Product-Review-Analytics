@@ -121,19 +121,19 @@ AI-Product-Review-System/
 
 ## File Upload and No. of Clusters
 
-![Dashboard](images/file_upload.png)
+![Dashboard](https://github.com/Rikan-Saha/Product-Review-Analytics/blob/main/images/File_upload.png)
 
 ---
 
 ## Cluster Analytics
 
-![Charts](images/dashboard.png)
+![Charts](https://github.com/Rikan-Saha/Product-Review-Analytics/blob/main/images/Dashboard.png)
 
 ---
 
 ## AI Recommendations: Below are plceholders.
 
-![Recommendations](images/recommendation.png)
+![Recommendations](https://github.com/Rikan-Saha/Product-Review-Analytics/blob/main/images/Recommendation.png)
 
 ---
 
