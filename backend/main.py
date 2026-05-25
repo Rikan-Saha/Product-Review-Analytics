@@ -1,134 +1,513 @@
-# backend/main.py
-
 from fastapi import FastAPI, UploadFile, File
+from fastapi.middleware.cors import CORSMiddleware
+
+from pydantic import BaseModel
 
 import pandas as pd
+
 from pathlib import Path
+
 from typing import List, Dict, Any
 
-# from backend.src.ingestion import clean_reviews
-from backend.src.sentiment import _is_spam, _classify_sentiment
-from backend.src.embedding import embed_texts
-from backend.src.clustering import _top_terms, cluster_embeddings_thread # cluster_embeddings
-from backend.src.agent import propose_improvements
-from backend.src.load_data import load_csv, load_xlsx
+# ==========================================
+# IMPORTS
+# ==========================================
 
-app = FastAPI()
+from backend.src.sentiment import (
+    _is_spam,
+    _classify_sentiment
+)
 
+from backend.src.embedding import (
+    embed_texts
+)
+
+from backend.src.clustering import (
+    _top_terms,
+    cluster_embeddings_thread
+)
+
+from backend.src.agent import (
+    propose_improvements
+)
+
+from backend.src.load_data import (
+    load_csv,
+    load_xlsx
+)
+
+# ==========================================
+# FASTAPI APP
+# ==========================================
+
+app = FastAPI(
+    title="AI Product Review Analytics API"
+)
+
+# ==========================================
+# CORS
+# ==========================================
+
+app.add_middleware(
+    CORSMiddleware,
+
+    allow_origins=["*"],
+
+    allow_credentials=True,
+
+    allow_methods=["*"],
+
+    allow_headers=["*"],
+)
+
+# ==========================================
+# ROOT
+# ==========================================
 
 @app.get("/")
 def home():
-    return {"message": "API Running"}
+
+    return {
+        "message":
+            "AI Product Review Analytics API Running"
+    }
+
+# ==========================================
+# LOAD DATA
+# ==========================================
 
 @app.post("/load_data")
-def load_data(file: UploadFile = File(...)) -> List[Dict[str, Any]]:
-    
-    file_extension = Path(file.filename).suffix.lower()
-    if file_extension == ".csv":
-        df = load_csv(file.file)
-    elif file_extension == ".xlsx":
-        df = load_xlsx(file.file)
-    else:
-        return [{"error": "Unsupported file format"}]
+def load_data(
+    file: UploadFile = File(...)
+) -> List[Dict[str, Any]]:
 
-    return df.to_dict(orient="records")
+    file_extension = (
+        Path(file.filename)
+        .suffix
+        .lower()
+    )
+
+    # ======================================
+    # CSV
+    # ======================================
+
+    if file_extension == ".csv":
+
+        df = load_csv(file.file)
+
+    # ======================================
+    # XLSX
+    # ======================================
+
+    elif file_extension == ".xlsx":
+
+        df = load_xlsx(file.file)
+
+    # ======================================
+    # INVALID
+    # ======================================
+
+    else:
+
+        return [
+            {
+                "error":
+                    "Unsupported file format"
+            }
+        ]
+
+    return df.to_dict(
+        orient="records"
+    )
+
+# ==========================================
+# CLEAN DATASET
+# ==========================================
 
 @app.post("/clean_ds")
-def clean_ds(data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+def clean_ds(
+    data: List[Dict[str, Any]]
+) -> List[Dict[str, Any]]:
 
     df = pd.DataFrame(data)
 
-    df = df.copy()
+    # ======================================
+    # FIND TEXT COLUMN
+    # ======================================
+
     text_col = None
 
     for c in df.columns:
-        if c.lower() in ("text", "review", "comment", "message"):
+
+        if c.lower() in (
+            "text",
+            "review",
+            "comment",
+            "message"
+        ):
+
             text_col = c
+
             break
 
+    # ======================================
+    # DEFAULT COLUMN
+    # ======================================
+
     if text_col is None:
+
         text_col = df.columns[0]
 
-    df["_text"] = df[text_col].astype(str)
-    df["is_spam"] = df["_text"].apply(_is_spam)
-    df_clean = df[~df["is_spam"]].reset_index(drop=True)
-    df_clean["sentiment"] = df_clean["_text"].apply(_classify_sentiment)
+    # ======================================
+    # CLEANING
+    # ======================================
 
-    return df_clean.to_dict(orient="records")
+    df["_text"] = (
+        df[text_col]
+        .astype(str)
+    )
 
-from pydantic import BaseModel
+    # ======================================
+    # SPAM DETECTION
+    # ======================================
+
+    df["is_spam"] = (
+        df["_text"]
+        .apply(_is_spam)
+    )
+
+    # ======================================
+    # REMOVE SPAM
+    # ======================================
+
+    df_clean = (
+        df[~df["is_spam"]]
+        .reset_index(drop=True)
+    )
+
+    # ======================================
+    # SENTIMENT
+    # ======================================
+
+    df_clean["sentiment"] = (
+        df_clean["_text"]
+        .apply(_classify_sentiment)
+    )
+
+    return df_clean.to_dict(
+        orient="records"
+    )
+
+# ==========================================
+# REQUEST MODEL
+# ==========================================
+
 class ClusterRequest(BaseModel):
-    cleaned_data: List[Dict[str, Any]]
-    num_clusters: int
+
+    cleaned_data:List[Dict[str, Any]]
+
+    num_clusters:int
+
+# ==========================================
+# CLUSTERING
+# ==========================================
 
 @app.post("/cluster_summarizer")
-def cluster_summarizer(request: ClusterRequest) -> Dict[str, Any]:
-    cleaned_df = pd.DataFrame(request.cleaned_data)
-    no_of_clusters = request.num_clusters
-    texts = cleaned_df["_text"].tolist()
+def cluster_summarizer(
+    request: ClusterRequest
+) -> Dict[str, Any]:
+
+    cleaned_df = pd.DataFrame(
+        request.cleaned_data
+    )
+
+    no_of_clusters = (
+        request.num_clusters
+    )
+
+    # ======================================
+    # TEXTS
+    # ======================================
+
+    texts = (
+        cleaned_df["_text"]
+        .tolist()
+    )
+
+    # ======================================
+    # EMBEDDINGS
+    # ======================================
+
     embeddings = embed_texts(texts)
-    labels = cluster_embeddings_thread(embeddings, no_of_clusters) # cluster_embeddings(embeddings)
+
+    # ======================================
+    # CLUSTERING
+    # ======================================
+
+    labels = cluster_embeddings_thread(
+        embeddings,
+        no_of_clusters
+    )
+
     cleaned_df["cluster"] = labels
-    
-    print("cleaned_df:", cleaned_df)
-    cluster_counts = cleaned_df["cluster"].value_counts().to_dict()
+
+    # ======================================
+    # CLUSTER COUNTS
+    # ======================================
+
+    cluster_counts = (
+        cleaned_df["cluster"]
+        .value_counts()
+        .to_dict()
+    )
+
+    # ======================================
+    # SUMMARIES
+    # ======================================
 
     summaries = {}
-    for lbl in sorted(cleaned_df["cluster"].unique()):
-        rows = cleaned_df[cleaned_df["cluster"] == lbl]
-        samples = rows["_text"].tolist()[:3]
-        top_terms = _top_terms(rows["_text"].tolist(), n=5)
+
+    for lbl in sorted(
+        cleaned_df["cluster"].unique()
+    ):
+
+        rows = cleaned_df[
+            cleaned_df["cluster"] == lbl
+        ]
+
+        samples = (
+            rows["_text"]
+            .tolist()[:3]
+        )
+
+        top_terms = _top_terms(
+            rows["_text"].tolist(),
+            n=5
+        )
+
         summaries[int(lbl)] = {
-            "count": int(len(rows)),
-            "top_terms": top_terms,
-            "samples": samples,
-            "sentiment_dist": rows["sentiment"].value_counts(normalize=True).to_dict(),
+
+            "count":
+                int(len(rows)),
+
+            "top_terms":
+                top_terms,
+
+            "samples":
+                samples,
+
+            "sentiment_dist":
+                rows["sentiment"]
+                .value_counts(
+                    normalize=True
+                )
+                .to_dict()
         }
-    return {"cluster_counts": cluster_counts, "summaries": summaries}
 
-@app.post("/generate_improvement_plans")
-def generate_improvement_plans(summarization: Dict[int, Dict[str, Any]]):
-    print(summarization, "Summ")
+    return {
+
+        "cluster_counts":
+            cluster_counts,
+
+        "summaries":
+            summaries
+    }
+
+# ==========================================
+# IMPROVEMENT PLANS
+# ==========================================
+
+@app.post(
+    "/generate_improvement_plans"
+)
+def generate_improvement_plans(
+    summarization:
+        Dict[int, Dict[str, Any]]
+):
+
     cluster_summaries = []
-    for lbl, meta in summarization.items():
-        cluster_summaries.append(f"Cluster {lbl}: count={meta['count']}; top_terms={', '.join(meta['top_terms'])}; samples={meta['samples']}")
-    cluster_summaries_text = "\n".join(cluster_summaries)
-    suggestions = propose_improvements(cluster_summaries_text)
 
-    return {"summarization": summarization, "suggestions": suggestions}
+    for lbl, meta in (
+        summarization.items()
+    ):
 
+        cluster_summaries.append(
+
+            f"""
+            Cluster {lbl}
+
+            count={meta['count']}
+
+            top_terms={
+                ', '.join(meta['top_terms'])
+            }
+
+            samples={meta['samples']}
+            """
+        )
+
+    cluster_summaries_text = (
+        "\n".join(cluster_summaries)
+    )
+
+    suggestions = propose_improvements(
+        cluster_summaries_text
+    )
+
+    return {
+
+        "summarization":
+            summarization,
+
+        "suggestions":
+            suggestions
+    }
+
+# ==========================================
+# EMBEDDING API
+# ==========================================
 
 @app.post("/embed_text")
-def embed_text(texts: List[str]) -> List[List[float]]:
-    print(texts)
+def embed_text(
+    texts: List[str]
+) -> List[List[float]]:
+
     embeddings = embed_texts(texts)
-    print(embeddings, embeddings.shape)
+
     return embeddings.tolist()
 
-# @app.post("/analyze_csv")
-# async def analyze_csv(file: UploadFile = File(...)):
+
+# # backend/main.py
+
+# from fastapi import FastAPI, UploadFile, File
+
+# import pandas as pd
+# from pathlib import Path
+# from typing import List, Dict, Any
+
+# # from backend.src.ingestion import clean_reviews
+# from backend.src.sentiment import _is_spam, _classify_sentiment
+# from backend.src.embedding import embed_texts
+# from backend.src.clustering import _top_terms, cluster_embeddings_thread # cluster_embeddings
+# from backend.src.agent import propose_improvements
+# from backend.src.load_data import load_csv, load_xlsx
+
+# app = FastAPI()
+
+
+# @app.get("/")
+# def home():
+#     return {"message": "API Running"}
+
+# @app.post("/load_data")
+# def load_data(file: UploadFile = File(...)) -> List[Dict[str, Any]]:
     
-#     df = pd.read_csv(file.file)
+#     file_extension = Path(file.filename).suffix.lower()
+#     if file_extension == ".csv":
+#         df = load_csv(file.file)
+#     elif file_extension == ".xlsx":
+#         df = load_xlsx(file.file)
+#     else:
+#         return [{"error": "Unsupported file format"}]
 
-#     # Step 1: Clean
-#     df = clean_reviews(df)
+#     return df.to_dict(orient="records")
 
-#     # Step 2: Sentiment
-#     df = apply_sentiment(df)
+# @app.post("/clean_ds")
+# def clean_ds(data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
 
-#     # Step 3: Embedding
-#     embeddings = generate_embeddings(df["review"])
+#     df = pd.DataFrame(data)
 
-#     # Step 4: Clustering
-#     df["cluster"] = cluster_reviews(embeddings)
+#     df = df.copy()
+#     text_col = None
 
-#     # Step 5: Recommendations
-#     recommendations = generate_recommendations(df)
+#     for c in df.columns:
+#         if c.lower() in ("text", "review", "comment", "message"):
+#             text_col = c
+#             break
 
-#     # Sentiment counts
-#     sentiment_counts = df["sentiment"].value_counts().to_dict()
+#     if text_col is None:
+#         text_col = df.columns[0]
 
-#     return {
-#         "sentiment_counts": sentiment_counts,
-#         "recommendations": recommendations
-#     }
+#     df["_text"] = df[text_col].astype(str)
+#     df["is_spam"] = df["_text"].apply(_is_spam)
+#     df_clean = df[~df["is_spam"]].reset_index(drop=True)
+#     df_clean["sentiment"] = df_clean["_text"].apply(_classify_sentiment)
+
+#     return df_clean.to_dict(orient="records")
+
+# from pydantic import BaseModel
+# class ClusterRequest(BaseModel):
+#     cleaned_data: List[Dict[str, Any]]
+#     num_clusters: int
+
+# @app.post("/cluster_summarizer")
+# def cluster_summarizer(request: ClusterRequest) -> Dict[str, Any]:
+#     cleaned_df = pd.DataFrame(request.cleaned_data)
+#     no_of_clusters = request.num_clusters
+#     texts = cleaned_df["_text"].tolist()
+#     embeddings = embed_texts(texts)
+#     labels = cluster_embeddings_thread(embeddings, no_of_clusters) # cluster_embeddings(embeddings)
+#     cleaned_df["cluster"] = labels
+    
+#     print("cleaned_df:", cleaned_df)
+#     cluster_counts = cleaned_df["cluster"].value_counts().to_dict()
+
+#     summaries = {}
+#     for lbl in sorted(cleaned_df["cluster"].unique()):
+#         rows = cleaned_df[cleaned_df["cluster"] == lbl]
+#         samples = rows["_text"].tolist()[:3]
+#         top_terms = _top_terms(rows["_text"].tolist(), n=5)
+#         summaries[int(lbl)] = {
+#             "count": int(len(rows)),
+#             "top_terms": top_terms,
+#             "samples": samples,
+#             "sentiment_dist": rows["sentiment"].value_counts(normalize=True).to_dict(),
+#         }
+#     return {"cluster_counts": cluster_counts, "summaries": summaries}
+
+# @app.post("/generate_improvement_plans")
+# def generate_improvement_plans(summarization: Dict[int, Dict[str, Any]]):
+#     print(summarization, "Summ")
+#     cluster_summaries = []
+#     for lbl, meta in summarization.items():
+#         cluster_summaries.append(f"Cluster {lbl}: count={meta['count']}; top_terms={', '.join(meta['top_terms'])}; samples={meta['samples']}")
+#     cluster_summaries_text = "\n".join(cluster_summaries)
+#     suggestions = propose_improvements(cluster_summaries_text)
+
+#     return {"summarization": summarization, "suggestions": suggestions}
+
+
+# @app.post("/embed_text")
+# def embed_text(texts: List[str]) -> List[List[float]]:
+#     print(texts)
+#     embeddings = embed_texts(texts)
+#     print(embeddings, embeddings.shape)
+#     return embeddings.tolist()
+
+# # @app.post("/analyze_csv")
+# # async def analyze_csv(file: UploadFile = File(...)):
+    
+# #     df = pd.read_csv(file.file)
+
+# #     # Step 1: Clean
+# #     df = clean_reviews(df)
+
+# #     # Step 2: Sentiment
+# #     df = apply_sentiment(df)
+
+# #     # Step 3: Embedding
+# #     embeddings = generate_embeddings(df["review"])
+
+# #     # Step 4: Clustering
+# #     df["cluster"] = cluster_reviews(embeddings)
+
+# #     # Step 5: Recommendations
+# #     recommendations = generate_recommendations(df)
+
+# #     # Sentiment counts
+# #     sentiment_counts = df["sentiment"].value_counts().to_dict()
+
+# #     return {
+# #         "sentiment_counts": sentiment_counts,
+# #         "recommendations": recommendations
+# #     }
