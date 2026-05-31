@@ -216,70 +216,113 @@ def _offline_improvement_proposals(cluster_summaries: str) -> List[Dict[str, Any
 # ---------------------------
 # Main entry
 # ---------------------------
+import json
+from dotenv import load_dotenv
+from openai import OpenAI
 
+# --------------------------------------------------
+# Load Environment Variables
+# --------------------------------------------------
+
+load_dotenv()
+
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4.1-mini")
+
+print("OPENAI_API_KEY:", os.getenv("OPENAI_API_KEY"))
+print("OPENAI_MODEL:", os.getenv("OPENAI_MODEL"))
+
+client = OpenAI(api_key=OPENAI_API_KEY)
 def propose_improvements(cluster_summaries: str):
-    """Call an LLM to propose improvements.
 
-    If Azure/OpenAI is configured, it uses the model.
-    Otherwise, it falls back to a local heuristic generator that analyzes the text
-    and produces the top 5 actionable improvements with rationales and priorities.
+    system_prompt = """
+    You are a Principal Product Manager.
+
+    Your job is to analyze customer review clusters
+    and identify the most valuable product improvements.
+
+    Consider:
+
+    - Customer pain points
+    - Complaint frequency
+    - Business impact
+    - User experience impact
+    - Product reliability
+    - Ease of implementation
+
+    Prioritize recommendations according to impact.
+
+    Return ONLY valid JSON.
     """
-    azure_key = os.environ.get("AZURE_OPENAI_KEY")
-    azure_base = os.environ.get("AZURE_OPENAI_BASE")
-    azure_deployment = os.environ.get("AZURE_OPENAI_DEPLOYMENT")
-    azure_api_version = os.environ.get("AZURE_OPENAI_API_VERSION", "2023-05-15")
 
-    prompt = PROMPT_TEMPLATE.format(cluster_summaries=cluster_summaries)
-    model_name = os.environ.get("AZURE_OPENAI_MODEL", "gpt-5-mini")
+    user_prompt = f"""
+    Analyze the following customer review clusters.
 
-    # Try Azure first
-    if azure_key and azure_base and azure_deployment:
-        try:
-            deployment = _configure_openai_for_azure(azure_key, azure_base, azure_deployment, azure_api_version)
-            messages = [
-                {"role": "system", "content": "You are a helpful product improvement assistant."},
-                {"role": "user", "content": prompt},
+    Customer Review Clusters:
+
+    {cluster_summaries}
+
+    Generate the TOP 5 product improvement recommendations.
+
+    Return JSON in the following format:
+
+    [
+      {{
+        "title": "",
+        "customer_problem": "",
+        "proposed_solution": "",
+        "expected_impact": "",
+        "priority_score": 1,
+        "implementation_complexity": "",
+        "category": ""
+      }}
+    ]
+
+    Categories:
+
+    - UX
+    - Feature
+    - Performance
+    - Reliability
+    - Support
+
+    Rules:
+
+    1. Return ONLY JSON.
+    2. No markdown.
+    3. No explanation outside JSON.
+    """
+
+    try:
+
+        response = client.responses.create(
+            model=OPENAI_MODEL,
+            input=[
+                {
+                    "role": "system",
+                    "content": system_prompt
+                },
+                {
+                    "role": "user",
+                    "content": user_prompt
+                }
             ]
-            resp = openai.ChatCompletion.create(
-                engine=deployment,
-                messages=messages,
-                temperature=0.2,
-                max_tokens=600,
-                request_timeout=30,
-            )
-            text = resp.choices[0].message.content
-            try:
-                return _try_parse_json(text)
-            except Exception:
-                # If parsing fails, still provide *automatic* suggestions offline
-                return _offline_improvement_proposals(cluster_summaries)
-        except Exception:
-            # If the API call fails for any reason, use offline heuristic suggestions
-            return _offline_improvement_proposals(cluster_summaries)
+        )
 
-    # Try non-Azure OpenAI
-    openai_key = os.environ.get("OPENAI_API_KEY")
-    if openai_key:
-        try:
-            openai.api_key = openai_key
-            messages = [
-                {"role": "system", "content": "You are a helpful product improvement assistant."},
-                {"role": "user", "content": prompt},
-            ]
-            resp = openai.ChatCompletion.create(
-                model=model_name,
-                messages=messages,
-                temperature=0.2,
-                max_tokens=600,
-                request_timeout=30,
-            )
-            text = resp.choices[0].message.content
-            try:
-                return _try_parse_json(text)
-            except Exception:
-                return _offline_improvement_proposals(cluster_summaries)
-        except Exception:
-            return _offline_improvement_proposals(cluster_summaries)
+        result = response.output_text
 
-    # No credentials present → offline automatic suggestions
-    return _offline_improvement_proposals(cluster_summaries)
+        return json.loads(result)
+
+    except Exception as e:
+
+        print(f"OpenAI Error: {e}")
+
+        return [{
+            "title": "OpenAI API Failure",
+            "customer_problem": str(e),
+            "proposed_solution": "Check API configuration",
+            "expected_impact": "Restore AI recommendations",
+            "priority_score": 10,
+            "implementation_complexity": "Low",
+            "category": "Support"
+        }]

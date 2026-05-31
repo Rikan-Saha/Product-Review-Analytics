@@ -7,12 +7,12 @@ export default function RecommendationCard({
         <div className="recommendation-card">
 
             <h3>
-                🚀 {rec.action}
+                🚀 {rec.customer_problem}
             </h3>
 
             <div className="recommendation-info">
 
-                {rec.rationale}
+                {rec.proposed_solution}
 
             </div>
 

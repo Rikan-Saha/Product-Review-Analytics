@@ -317,9 +317,7 @@ def cluster_summarizer(
 # IMPROVEMENT PLANS
 # ==========================================
 
-@app.post(
-    "/generate_improvement_plans"
-)
+@app.post("/generate_improvement_plans")
 def generate_improvement_plans(
     summarization:
         Dict[int, Dict[str, Any]]
@@ -354,6 +352,7 @@ def generate_improvement_plans(
         cluster_summaries_text
     )
 
+    print("suggestions: ", suggestions)
     return {
 
         "summarization":
